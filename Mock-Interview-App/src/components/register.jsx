@@ -48,8 +48,15 @@ function Register({ mode, onModeChange, onComplete }) {
         localStorage.setItem("authToken", token);
       }
 
-      // Call onComplete with the backend response for the app to route/update state
-      if (onComplete) onComplete(data);
+      // Include form identity because the login API currently returns only a token.
+      if (onComplete) {
+        onComplete({
+          ...data,
+          full_name: data?.full_name || name,
+          email: data?.email || email,
+          target_role: data?.target_role || role,
+        });
+      }
     } catch (err) {
       setError(err.message || "An unexpected error occurred");
     } finally {

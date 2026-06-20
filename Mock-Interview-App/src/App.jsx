@@ -1,13 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import logo from "./assets/mock.jpg";
 import Profile from "./components/profile";
 import Register from "./components/register";
 
+const API_BASE = "http://127.0.0.1:8000";
+
+const getStoredUser = () => {
+  const storedUser = localStorage.getItem("authUser");
+
+  if (!storedUser) return null;
+
+  try {
+    return JSON.parse(storedUser);
+  } catch {
+    localStorage.removeItem("authUser");
+    return null;
+  }
+};
+
 function App() {
   const [authMode, setAuthMode] = useState(null);
   const [page, setPage] = useState("home");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    Boolean(localStorage.getItem("authToken"))
+  );
+  const [currentUser, setCurrentUser] = useState(getStoredUser);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef(null);
 
   const features = [
     {
@@ -49,22 +69,68 @@ function App() {
 
     setPage("profile");
     setAuthMode(null);
+    setIsAccountMenuOpen(false);
     scrollTop();
   };
 
   const handleAuthComplete = (data) => {
-    // `data` may contain user info or token; token is stored by the Register component
+    const user = data?.user || data?.user_info || data?.profile || data;
+    const userInfo = {
+      full_name: user?.full_name || user?.name || data?.full_name || "",
+      email: user?.email || data?.email || "",
+      photo_url: user?.photo_url || user?.profile_photo || user?.avatar || "",
+    };
+
+    localStorage.setItem("authUser", JSON.stringify(userInfo));
+    setCurrentUser(userInfo);
     setIsAuthenticated(true);
     setPage("profile");
     setAuthMode(null);
+    setIsAccountMenuOpen(false);
     scrollTop();
   };
 
-  useEffect(() => {
-    // check for existing token (persisted from login/register)
+  const handleLogout = async () => {
     const token = localStorage.getItem("authToken");
-    if (token) setIsAuthenticated(true);
-  }, []);
+
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+    } catch (error) {
+      console.error("Logout request failed", error);
+    } finally {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("authUser");
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      setIsAccountMenuOpen(false);
+      goHome();
+    }
+  };
+
+  const getUserInitial = () => {
+    const displayName =
+      currentUser?.full_name || currentUser?.name || currentUser?.email || "U";
+    return displayName.trim().charAt(0).toUpperCase() || "U";
+  };
+
+  useEffect(() => {
+    if (!isAccountMenuOpen) return;
+
+    const handleClickOutside = (event) => {
+      if (
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target)
+      ) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isAccountMenuOpen]);
 
   return (
     <div className="app">
@@ -86,10 +152,34 @@ function App() {
             </a>
           </li>
           {isAuthenticated ? (
-            <li>
-              <button className="nav-link-btn profile-btn" onClick={openProfile}>
-                Profile
+            <li className="account-menu" ref={accountMenuRef}>
+              <button
+                className="avatar-menu-button"
+                onClick={() => setIsAccountMenuOpen((isOpen) => !isOpen)}
+                aria-expanded={isAccountMenuOpen}
+                aria-haspopup="menu"
+                aria-label="Open account menu"
+              >
+                {currentUser?.photo_url ? (
+                  <img
+                    src={currentUser.photo_url}
+                    alt=""
+                    className="nav-avatar-img"
+                  />
+                ) : (
+                  <span className="nav-avatar-initial">{getUserInitial()}</span>
+                )}
               </button>
+              {isAccountMenuOpen && (
+                <div className="account-dropdown" role="menu">
+                  <button type="button" onClick={openProfile} role="menuitem">
+                    Visit Profile
+                  </button>
+                  <button type="button" onClick={handleLogout} role="menuitem">
+                    Logout
+                  </button>
+                </div>
+              )}
             </li>
           ) : (
             <li>
@@ -102,7 +192,7 @@ function App() {
       </nav>
 
       {page === "profile" && isAuthenticated ? (
-        <Profile />
+        <Profile user={currentUser} />
       ) : authMode ? (
         <Register
           mode={authMode}

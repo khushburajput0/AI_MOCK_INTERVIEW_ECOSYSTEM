@@ -1,6 +1,10 @@
 import avatar from "../assets/mock.jpg";
 
-function Profile() {
+function Profile({ user }) {
+  const displayName = user?.full_name || user?.name || "Candidate";
+  const displayEmail = user?.email || "No email available";
+  const profilePhoto = user?.photo_url || user?.profile_photo || user?.avatar;
+
   const stats = [
     {
       label: "Mock interviews completed",
@@ -28,11 +32,15 @@ function Profile() {
     <main className="profile-page">
       <section className="profile-header">
         <div className="profile-identity">
-          <img src={avatar} alt="User profile" className="profile-avatar" />
+          <img
+            src={profilePhoto || avatar}
+            alt="User profile"
+            className="profile-avatar"
+          />
           <div>
             <span className="eyebrow">Candidate Profile</span>
-            <h1>Khushi Sharma</h1>
-            <p>khushi.sharma@example.com</p>
+            <h1>{displayName}</h1>
+            <p>{displayEmail}</p>
           </div>
         </div>
 

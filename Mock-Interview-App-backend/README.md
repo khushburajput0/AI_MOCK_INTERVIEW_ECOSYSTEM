@@ -16,6 +16,8 @@ This README explains how to install dependencies, configure environment variable
 
 2. Activate the included virtual environment (optional) or create a fresh one.
 
+macOS / Linux (zsh / bash):
+
 ```zsh
 # Use the provided virtualenv if you want to reuse it
 source env/bin/activate
@@ -25,11 +27,42 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
+Windows (PowerShell):
+
+```powershell
+# Use the provided virtualenv if you want to reuse it
+env\Scripts\Activate.ps1
+
+# OR create a fresh venv
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+Windows (Command Prompt):
+
+```cmd
+REM Use the provided virtualenv if you want to reuse it
+env\Scripts\activate.bat
+
+REM OR create a fresh venv
+python -m venv .venv
+.venv\Scripts\activate.bat
+```
+
 3. Install dependencies:
+
+macOS / Linux (zsh / bash):
 
 ```zsh
 pip install --upgrade pip
 pip install -r requirements.txt
+```
+
+Windows (PowerShell / Command Prompt):
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 ## Environment variables
@@ -55,10 +88,25 @@ Notes:
 
 Example commands to create a database and user locally (run as a Postgres superuser):
 
+macOS / Linux:
+
 ```zsh
 psql -U postgres -h localhost -p 5432
 
 # inside psql:
+CREATE USER rishudb WITH PASSWORD 'Rishu@8279';
+CREATE DATABASE rishudb OWNER rishudb;
+GRANT ALL PRIVILEGES ON DATABASE rishudb TO rishudb;
+\q
+```
+
+Windows (PowerShell / Command Prompt):
+
+```powershell
+# If psql is on your PATH (Postgres installer usually adds it), run:
+psql -U postgres -h localhost -p 5432
+
+# inside psql (same SQL commands):
 CREATE USER rishudb WITH PASSWORD 'Rishu@8279';
 CREATE DATABASE rishudb OWNER rishudb;
 GRANT ALL PRIVILEGES ON DATABASE rishudb TO rishudb;
@@ -77,8 +125,20 @@ GRANT ALL ON SCHEMA public TO rishudb;
 
 Start the FastAPI app with uvicorn (development reload enabled):
 
+macOS / Linux:
+
 ```zsh
 uvicorn app.main:app --reload --port 8000
+```
+
+Windows (PowerShell / Command Prompt):
+
+```powershell
+# If uvicorn is available on PATH:
+uvicorn app.main:app --reload --port 8000
+
+# Or use the python -m invocation to avoid PATH issues:
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 Interactive docs:
@@ -90,18 +150,34 @@ Interactive docs:
 
 Register a new user (JSON body):
 
+macOS / Linux (curl):
+
 ```zsh
 curl -X POST "http://127.0.0.1:8000/auth/register" \
 	-H "Content-Type: application/json" \
 	-d '{"full_name":"Rishu","email":"rishu@example.com","target_role":"backend","password":"SuperSecret123"}'
 ```
 
+Windows (PowerShell - Invoke-RestMethod):
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/auth/register" -Method Post -ContentType "application/json" -Body '{"full_name":"Rishu","email":"rishu@example.com","target_role":"backend","password":"SuperSecret123"}'
+```
+
 Login (returns JWT token):
+
+macOS / Linux (curl):
 
 ```zsh
 curl -X POST "http://127.0.0.1:8000/auth/login" \
 	-H "Content-Type: application/json" \
 	-d '{"email":"rishu@example.com","password":"SuperSecret123"}'
+```
+
+Windows (PowerShell - Invoke-RestMethod):
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/auth/login" -Method Post -ContentType "application/json" -Body '{"email":"rishu@example.com","password":"SuperSecret123"}'
 ```
 
 Use the returned `access_token` in the `Authorization: Bearer <token>` header for protected endpoints.

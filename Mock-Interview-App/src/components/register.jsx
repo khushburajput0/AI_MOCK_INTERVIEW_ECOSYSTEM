@@ -1,9 +1,61 @@
+import { useState } from "react";
+
 function Register({ mode, onModeChange, onComplete }) {
   const isRegister = mode === "register";
-  const handleSubmit = (event) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const API_BASE = "http://127.0.0.1:8000";
+
+  async function handleSubmit(event) {
     event.preventDefault();
-    onComplete();
-  };
+    setError("");
+    setLoading(true);
+
+    try {
+      let res;
+      if (isRegister) {
+        // backend expects full_name and target_role fields
+        res = await fetch(`${API_BASE}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ full_name: name, email, target_role: role, password }),
+        });
+      } else {
+        // Note: removed accidental double-slash in your provided URL
+        res = await fetch(`${API_BASE}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+      }
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // backend may send { detail: '...' } or { error: '...' }
+        const message = data?.detail || data?.error || data?.message || "Request failed";
+        throw new Error(message);
+      }
+
+      // If your backend returns a token, save it and pass user info to parent
+      if (data?.token || data?.access_token) {
+        const token = data.token || data.access_token;
+        localStorage.setItem("authToken", token);
+      }
+
+      // Call onComplete with the backend response for the app to route/update state
+      if (onComplete) onComplete(data);
+    } catch (err) {
+      setError(err.message || "An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <main className="auth-page">
@@ -49,15 +101,31 @@ function Register({ mode, onModeChange, onComplete }) {
           <form className="auth-form" onSubmit={handleSubmit}>
             <label>
               Full name
-              <input type="text" placeholder="Enter your name" required />
+              <input
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
             </label>
             <label>
               Email address
-              <input type="email" placeholder="you@example.com" required />
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </label>
             <label>
               Target role
-              <select defaultValue="" required>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                required
+              >
                 <option value="" disabled>
                   Select a role
                 </option>
@@ -69,10 +137,17 @@ function Register({ mode, onModeChange, onComplete }) {
             </label>
             <label>
               Password
-              <input type="password" placeholder="Create a password" required />
+              <input
+                type="password"
+                placeholder="Create a password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </label>
-            <button className="primary auth-submit" type="submit">
-              Create Account
+            {error && <p className="form-error">{error}</p>}
+            <button className="primary auth-submit" type="submit" disabled={loading}>
+              {loading ? "Creating…" : "Create Account"}
             </button>
             <p className="auth-switch">
               Already registered?
@@ -85,11 +160,23 @@ function Register({ mode, onModeChange, onComplete }) {
           <form className="auth-form" onSubmit={handleSubmit}>
             <label>
               Email address
-              <input type="email" placeholder="you@example.com" required />
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </label>
             <label>
               Password
-              <input type="password" placeholder="Enter your password" required />
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </label>
             <div className="form-row">
               <label className="remember">
@@ -100,8 +187,9 @@ function Register({ mode, onModeChange, onComplete }) {
                 Forgot password?
               </button>
             </div>
-            <button className="primary auth-submit" type="submit">
-              Login
+            {error && <p className="form-error">{error}</p>}
+            <button className="primary auth-submit" type="submit" disabled={loading}>
+              {loading ? "Logging in…" : "Login"}
             </button>
             <p className="auth-switch">
               New to MockMate AI?

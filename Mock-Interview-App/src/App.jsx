@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import logo from "./assets/mock.jpg";
 import Profile from "./components/profile";
@@ -52,12 +52,19 @@ function App() {
     scrollTop();
   };
 
-  const handleAuthComplete = () => {
+  const handleAuthComplete = (data) => {
+    // `data` may contain user info or token; token is stored by the Register component
     setIsAuthenticated(true);
     setPage("profile");
     setAuthMode(null);
     scrollTop();
   };
+
+  useEffect(() => {
+    // check for existing token (persisted from login/register)
+    const token = localStorage.getItem("authToken");
+    if (token) setIsAuthenticated(true);
+  }, []);
 
   return (
     <div className="app">

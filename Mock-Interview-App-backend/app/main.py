@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import logging
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import auth_router, profile_router, interview_router
 from app.core.database import engine, Base, get_engine
@@ -7,6 +8,17 @@ from app.core.database import engine, Base, get_engine
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Mock Interview App Backend")
+
+# CORS - allow browser-based clients to make requests (including preflight OPTIONS)
+# For development it's common to allow all origins; in production narrow this to your UI origin(s).
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth_router.router, prefix="/auth")
 app.include_router(profile_router.router, prefix="/profiles")

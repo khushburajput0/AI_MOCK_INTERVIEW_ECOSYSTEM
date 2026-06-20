@@ -7,6 +7,7 @@ import Register from "./components/register";
 function App() {
   const [authMode, setAuthMode] = useState(null);
   const [page, setPage] = useState("home");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const features = [
     {
@@ -41,6 +42,18 @@ function App() {
   };
 
   const openProfile = () => {
+    if (!isAuthenticated) {
+      openAuthPage("login");
+      return;
+    }
+
+    setPage("profile");
+    setAuthMode(null);
+    scrollTop();
+  };
+
+  const handleAuthComplete = () => {
+    setIsAuthenticated(true);
     setPage("profile");
     setAuthMode(null);
     scrollTop();
@@ -65,26 +78,29 @@ function App() {
               Features
             </a>
           </li>
-          <li>
-            <button className="nav-link-btn" onClick={openProfile}>
-              Profile
-            </button>
-          </li>
-          <li>
-            <button className="login-btn" onClick={() => openAuthPage("login")}>
-              Login
-            </button>
-          </li>
+          {isAuthenticated ? (
+            <li>
+              <button className="nav-link-btn profile-btn" onClick={openProfile}>
+                Profile
+              </button>
+            </li>
+          ) : (
+            <li>
+              <button className="login-btn" onClick={() => openAuthPage("login")}>
+                Login
+              </button>
+            </li>
+          )}
         </ul>
       </nav>
 
-      {page === "profile" ? (
+      {page === "profile" && isAuthenticated ? (
         <Profile />
       ) : authMode ? (
         <Register
           mode={authMode}
           onModeChange={setAuthMode}
-          onComplete={openProfile}
+          onComplete={handleAuthComplete}
         />
       ) : (
         <>

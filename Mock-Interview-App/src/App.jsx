@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
+import aiToolsImage from "./assets/ai-tools.webp";
 import logo from "./assets/mock.jpg";
+import Home from "./components/home";
 import Profile from "./components/profile";
 import Register from "./components/register";
 
@@ -21,9 +23,11 @@ const getStoredUser = () => {
 
 function App() {
   const [authMode, setAuthMode] = useState(null);
-  const [page, setPage] = useState("home");
   const [isAuthenticated, setIsAuthenticated] = useState(() =>
     Boolean(localStorage.getItem("authToken"))
+  );
+  const [page, setPage] = useState(() =>
+    localStorage.getItem("authToken") ? "home" : "landing"
   );
   const [currentUser, setCurrentUser] = useState(getStoredUser);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
@@ -52,13 +56,30 @@ function App() {
   const openAuthPage = (mode) => {
     setPage("auth");
     setAuthMode(mode);
+    setIsAccountMenuOpen(false);
     scrollTop();
   };
 
   const goHome = () => {
-    setPage("home");
+    setPage(isAuthenticated ? "home" : "landing");
     setAuthMode(null);
+    setIsAccountMenuOpen(false);
     scrollTop();
+  };
+
+  const handleGetStarted = () => {
+    const token = localStorage.getItem("authToken");
+
+    if (isAuthenticated || token) {
+      setIsAuthenticated(true);
+      setPage("home");
+      setAuthMode(null);
+      setIsAccountMenuOpen(false);
+      scrollTop();
+      return;
+    }
+
+    openAuthPage("register");
   };
 
   const openProfile = () => {
@@ -84,7 +105,7 @@ function App() {
     localStorage.setItem("authUser", JSON.stringify(userInfo));
     setCurrentUser(userInfo);
     setIsAuthenticated(true);
-    setPage("profile");
+    setPage("home");
     setAuthMode(null);
     setIsAccountMenuOpen(false);
     scrollTop();
@@ -141,16 +162,6 @@ function App() {
         </button>
 
         <ul className="nav-links">
-          <li>
-            <button className="nav-link-btn" onClick={goHome}>
-              Home
-            </button>
-          </li>
-          <li>
-            <a href="#features" onClick={goHome}>
-              Features
-            </a>
-          </li>
           {isAuthenticated ? (
             <li className="account-menu" ref={accountMenuRef}>
               <button
@@ -199,6 +210,8 @@ function App() {
           onModeChange={setAuthMode}
           onComplete={handleAuthComplete}
         />
+      ) : page === "home" && isAuthenticated ? (
+        <Home user={currentUser} onViewProfile={openProfile} />
       ) : (
         <>
           <section className="hero" id="home">
@@ -212,7 +225,7 @@ function App() {
               <div className="buttons">
                 <button
                   className="primary"
-                  onClick={() => openAuthPage("register")}
+                  onClick={handleGetStarted}
                 >
                   Get Started
                 </button>
@@ -235,35 +248,24 @@ function App() {
               </div>
             </div>
 
-            <div className="hero-panel" aria-label="Interview feedback preview">
-              <div className="panel-header">
-                <span className="status-dot"></span>
-                <span>Live Interview Session</span>
+            <div className="hero-visual" aria-label="MockMate AI practice preview">
+              <div className="hero-image-frame">
+                <img
+                  src={aiToolsImage}
+                  alt="AI tools for mock interview preparation"
+                  className="hero-main-image"
+                />
               </div>
-              <div className="question-card">
-                <small>Current question</small>
-                <h3>
-                  Tell me about a project where you solved a difficult problem.
-                </h3>
+              <div className="floating-card floating-card-top">
+                <span>AI Coach</span>
+                <strong>Personalized questions ready</strong>
               </div>
-              <div className="score-row">
-                <span>Clarity</span>
-                <div className="meter">
-                  <span style={{ width: "86%" }}></span>
-                </div>
-                <strong>86%</strong>
+              <div className="floating-card floating-card-bottom">
+                <span>Progress</span>
+                <strong>Confidence up 42%</strong>
               </div>
-              <div className="score-row">
-                <span>Structure</span>
-                <div className="meter">
-                  <span style={{ width: "74%" }}></span>
-                </div>
-                <strong>74%</strong>
-              </div>
-              <p className="tip">
-                Add a measurable result at the end of your answer to make it
-                more convincing.
-              </p>
+              <div className="visual-chip visual-chip-left">Role practice</div>
+              <div className="visual-chip visual-chip-right">Fast feedback</div>
             </div>
           </section>
 

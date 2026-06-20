@@ -35,6 +35,7 @@ async def startup_event():
         from app.models import user as _user_module
         from app.models import profile as _profile_module
         from app.models import interview as _interview_module
+        from app.models import revoked_token as _revoked_module
 
         Base.metadata.create_all(bind=eng)
         logger.info("Database connected and tables ensured.")

@@ -5,6 +5,8 @@ from app.schemas.user_schema import UserCreate, UserOut, UserLogin
 from app.schemas.token_schema import Token
 from app.core.database import get_db
 from app.services import auth_service
+from app.dependencies.get_current_user import get_current_user, oauth2_scheme
+from app.repository.token_repository import revoke_token
 
 router = APIRouter()
 
@@ -30,3 +32,17 @@ def login(form_data: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
     token = auth_service.create_token_for_user(user)
     return {"access_token": token, "token_type": "bearer"}
+
+
+
+@router.post("/logout", status_code=204)
+def logout(token: str = Depends(oauth2_scheme), current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    """Logout the current user by revoking the presented token.
+
+    The endpoint stores the token in a revocation table so it can no longer be used.
+    """
+    if not token:
+        return
+
+    revoke_token(db, token)
+    return

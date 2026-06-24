@@ -12,6 +12,9 @@ class Settings(BaseSettings):
 
     DATABASE_URL: Optional[str] = None
     DB_CONNECTION: Optional[str] = None
+    # Gemini / LLM config - loaded from .env via BaseSettings
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_API_URL: Optional[str] = None
 
 
 settings = Settings()

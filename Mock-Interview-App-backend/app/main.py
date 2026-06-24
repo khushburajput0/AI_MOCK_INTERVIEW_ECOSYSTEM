@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth_router, profile_router, interview_router
+from app.routers import auth_router, profile_router, interview_router, qa_router
 from app.core.database import engine, Base, get_engine
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ app.add_middleware(
 app.include_router(auth_router.router, prefix="/auth")
 app.include_router(profile_router.router, prefix="/profiles")
 app.include_router(interview_router.router, prefix="/interviews")
+app.include_router(qa_router.router, prefix="/qa")
 
 
 @app.on_event("startup")
@@ -36,6 +37,7 @@ async def startup_event():
         from app.models import profile as _profile_module
         from app.models import interview as _interview_module
         from app.models import revoked_token as _revoked_module
+        from app.models import qa as _qa_module
 
         Base.metadata.create_all(bind=eng)
         logger.info("Database connected and tables ensured.")

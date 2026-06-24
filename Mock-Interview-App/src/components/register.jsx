@@ -43,8 +43,33 @@ function Register({ mode, onModeChange, onComplete }) {
       }
 
       // If your backend returns a token, save it and pass user info to parent
-      if (data?.token || data?.access_token) {
-        const token = data.token || data.access_token;
+      const extractToken = (obj) => {
+        if (!obj) return null;
+        return obj.token || obj.access_token || obj.access || obj.auth_token || obj.refresh;
+      };
+
+      let token = extractToken(data);
+
+      // If registering and backend didn't return a token, try logging in to obtain one
+      if (isRegister && !token) {
+        try {
+          const loginRes = await fetch(`${API_BASE}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const loginData = await loginRes.json();
+          token = extractToken(loginData);
+          // Some backends return { access: 'token' } or { access_token }
+          if (!token && loginData?.data && typeof loginData.data === 'object') {
+            token = extractToken(loginData.data);
+          }
+        } catch (e) {
+          // ignore - we will surface error below if token missing
+        }
+      }
+
+      if (token) {
         localStorage.setItem("authToken", token);
       }
 

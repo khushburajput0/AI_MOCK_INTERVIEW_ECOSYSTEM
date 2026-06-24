@@ -5,6 +5,9 @@ from datetime import datetime
 class InterviewCreate(BaseModel):
     title: str
     scheduled_at: datetime
+    job_role: str | None = None
+    job_description: str | None = None
+    years_experience: int | None = None
 
 
 class InterviewOut(BaseModel):
@@ -14,3 +17,7 @@ class InterviewOut(BaseModel):
     user_id: int
     title: str
     scheduled_at: datetime
+    job_role: str | None = None
+    job_description: str | None = None
+    years_experience: int | None = None
+    created_at: datetime

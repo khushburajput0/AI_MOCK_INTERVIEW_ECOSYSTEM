@@ -10,11 +10,6 @@ body {
   color: #172033;
 }
 
-button,
-a {
-  font: inherit;
-}
-
 button {
   cursor: pointer;
 }
@@ -33,6 +28,8 @@ button {
 .app {
   min-height: 100vh;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .navbar {
@@ -399,6 +396,97 @@ button {
   line-height: 1.12;
 }
 
+/* Dashboard & Modal styles */
+.dashboard {
+  padding: 40px 7%;
+}
+
+.dashboard h2 {
+  font-size: 1.9rem;
+  margin-bottom: 18px;
+}
+
+.dashboard .primary {
+  background: #2b6ef6;
+  padding: 12px 18px;
+  border-radius: 10px;
+}
+
+.previous {
+  margin-top: 18px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e6edf9;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 12px 28px rgba(32,45,73,0.06);
+}
+
+.card h4 {
+  color: #2b2f8a;
+  margin-bottom: 6px;
+}
+
+.card p { color:#5b6778; margin:6px 0 }
+
+.card .actions { margin-top: 12px }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(19, 24, 34, 0.36);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 60px;
+  z-index: 200;
+}
+
+.modal {
+  background: #fff;
+  width: min(980px, 96%);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 30px 80px rgba(32,45,73,0.2);
+  display: grid;
+  gap: 12px;
+}
+
+.modal h3 { font-size: 1.4rem }
+
+.modal form { display: grid; grid-template-columns: 1fr 1fr 160px; gap: 12px; align-items:start }
+.modal label { display:block; font-weight:700; color:#1f2a44; font-size:0.95rem }
+.modal input, .modal textarea { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #e6edf9; background:#fbfdff }
+.modal textarea { min-height:84px }
+
+.modal-actions { grid-column: 1 / -1; display:flex; justify-content:flex-end; gap:12px }
+.modal .secondary { background:transparent; color:#1f2a44; border:1px solid #dfe7f2; padding:10px 14px }
+.modal .primary { padding:10px 18px }
+
+/* Interview page */
+.interview-page { padding: 40px 7% }
+.interview-page .grid { display:grid; grid-template-columns: 1fr 420px; gap: 22px }
+.interview-page .details { background:#fff; padding:18px; border-radius:10px; border:1px solid #eef4ff }
+.interview-page .camera { display:flex; flex-direction:column; gap:12px }
+.camera-placeholder { height:260px; border-radius:10px; background:#f6f8fc; display:flex; align-items:center; justify-content:center; border:1px dashed #dfe7f2 }
+.camera-placeholder video { width:100%; height:100%; object-fit:cover; border-radius:8px }
+.camera-actions { display:flex; justify-content:center }
+
+@media (max-width: 800px) {
+  .modal form { grid-template-columns: 1fr }
+  .interview-page .grid { grid-template-columns: 1fr }
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -441,10 +529,23 @@ button {
 }
 
 footer {
+  background: #111827;
+  color: #fff;
+  padding: 28px 0;
   text-align: center;
-  padding: 20px;
-  background: #172033;
-  color: white;
+  /* part of normal flow; will appear after page content */
+  margin-top: 40px;
+}
+
+/* Dashboard heading and subtitle */
+.dashboard h2 {
+  font-size: 2.4rem;
+  margin-bottom: 6px;
+}
+.dashboard .subtitle {
+  color: #6b7280;
+  margin-bottom: 18px;
+  font-size: 1rem;
 }
 
 @keyframes fadeSlideUp {
@@ -456,18 +557,6 @@ footer {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes fadeScaleIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.97);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
@@ -524,6 +613,10 @@ footer {
   margin-top: -90px;
 }
 
+.auth-page-login .auth-hero {
+  margin-top: -60px;
+}
+
 .auth-hero h1 {
   margin-top: 5px;
   max-width: 720px;
@@ -565,6 +658,10 @@ footer {
   box-shadow: 0 26px 70px rgba(32, 45, 73, 0.14);
 }
 
+.auth-page-register .auth-card {
+  padding-block: 22px;
+}
+
 .auth-tabs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -595,6 +692,11 @@ footer {
   margin-top: 26px;
 }
 
+.auth-page-register .auth-form {
+  gap: 13px;
+  margin-top: 20px;
+}
+
 .auth-form label {
   display: grid;
   gap: 8px;
@@ -611,6 +713,11 @@ footer {
   background: #f8fbff;
   color: #172033;
   outline: none;
+}
+
+.auth-page-register .auth-form input,
+.auth-page-register .auth-form select {
+  padding: 10px 12px;
 }
 
 .auth-form input:focus,

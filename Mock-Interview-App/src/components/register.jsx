@@ -65,7 +65,7 @@ function Register({ mode, onModeChange, onComplete }) {
   }
 
   return (
-    <main className="auth-page">
+    <main className={`auth-page ${isRegister ? "auth-page-register" : "auth-page-login"}`}>
       <section className="auth-hero">
         <span className="eyebrow">
           {isRegister ? "Create your account" : "Welcome back"}

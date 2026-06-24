@@ -506,7 +506,7 @@ footer {
 .auth-page {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 460px);
-  gap: 56px;
+  gap: 20px;
   align-items: center;
   min-height: calc(100vh - 85px);
   padding: 78px 7%;
@@ -515,8 +515,17 @@ footer {
     linear-gradient(135deg, #f8fbff 0%, #eef4ff 52%, #f7fbf8 100%);
 }
 
+.auth-page-register > *,
+.auth-page-login > * {
+  transform: translateY(-50px);
+}
+
+.auth-hero {
+  margin-top: -90px;
+}
+
 .auth-hero h1 {
-  margin-top: 20px;
+  margin-top: 5px;
   max-width: 720px;
   color: #111827;
   font-size: clamp(2.35rem, 5vw, 4.7rem);
@@ -928,6 +937,11 @@ footer {
   .auth-page {
     grid-template-columns: 1fr;
     padding-top: 64px;
+  }
+
+  .auth-page-register > *,
+  .auth-page-login > * {
+    transform: translateY(-32px);
   }
 
   .home-hero,

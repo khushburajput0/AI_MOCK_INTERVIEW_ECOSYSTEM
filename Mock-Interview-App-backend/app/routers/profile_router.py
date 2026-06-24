@@ -8,6 +8,7 @@ from app.repository.interview_repository import (
     average_score,
     best_score,
     latest_future_interview,
+    latest_completed_interview,
 )
 
 router = APIRouter()
@@ -22,7 +23,7 @@ def get_my_profile(current_user=Depends(get_current_user), db: Session = Depends
     total = count_completed_interviews(db, user.id)
     avg = average_score(db, user.id)
     best = best_score(db, user.id)
-    latest = latest_future_interview(db, user.id)
+    latest = latest_completed_interview(db, user.id)
 
     return {
         "full_name": user.full_name,

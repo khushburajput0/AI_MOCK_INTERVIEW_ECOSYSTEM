@@ -1,4 +1,4 @@
-function Home({ user, onViewProfile }) {
+function Home({ user, onViewProfile, onOpenDashboard }) {
   const displayName = user?.full_name || user?.name || user?.email || "there";
 
   return (
@@ -12,7 +12,7 @@ function Home({ user, onViewProfile }) {
             performance, or start a fresh role-based mock round.
           </p>
           <div className="buttons">
-            <button className="primary">Start Mock Interview</button>
+            <button className="primary" onClick={onOpenDashboard}>Start Mock Interview</button>
             <button className="secondary" onClick={onViewProfile}>
               View Profile
             </button>

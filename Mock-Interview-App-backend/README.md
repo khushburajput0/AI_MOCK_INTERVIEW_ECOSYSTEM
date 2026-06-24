@@ -80,6 +80,13 @@ ACCESS_TOKEN_EXPIRE_MINUTES=60
 DB_CONNECTION=postgresql+psycopg2://rishudb:Rishu%408279@localhost:5432/rishudb
 ```
 
+Example (Neon Postgres, enforce SSL):
+
+```env
+# Neon connection string (example)
+DB_CONNECTION=postgresql://neondb_owner:npg_4m2zAKdkPBlO@ep-wandering-firefly-ad6ciuky-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+```
+
 Notes:
 - Use a strong `SECRET_KEY` (32+ characters) to avoid JWT warnings and improve security.
 - The app can also fall back to `DATABASE_URL` if `DB_CONNECTION` is not provided.

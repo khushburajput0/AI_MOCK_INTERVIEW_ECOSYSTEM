@@ -11,6 +11,11 @@ class Interview(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String, nullable=False)
     scheduled_at = Column(DateTime, default=datetime.utcnow)
+    # Job related details
+    job_role = Column(String, nullable=True)
+    job_description = Column(String, nullable=True)
+    years_experience = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     # score of the completed interview (0-100). Nullable for scheduled-only interviews.
     score = Column(Float, nullable=True)
     completed_at = Column(DateTime, nullable=True)

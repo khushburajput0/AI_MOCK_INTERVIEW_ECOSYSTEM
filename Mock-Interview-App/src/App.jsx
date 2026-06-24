@@ -5,6 +5,9 @@ import logo from "./assets/mock.jpg";
 import Home from "./components/home";
 import Profile from "./components/profile";
 import Register from "./components/register";
+import Dashboard from "./components/dashboard";
+import InterviewPage from "./components/interviewPage";
+import Feedback from "./components/feedback";
 
 const API_BASE = "http://127.0.0.1:8000";
 
@@ -91,6 +94,31 @@ function App() {
     setPage("profile");
     setAuthMode(null);
     setIsAccountMenuOpen(false);
+    scrollTop();
+  };
+
+  const openDashboard = () => {
+    if (!isAuthenticated) {
+      openAuthPage("login");
+      return;
+    }
+
+    setPage("dashboard");
+    setAuthMode(null);
+    setIsAccountMenuOpen(false);
+    scrollTop();
+  };
+
+  const openInterviewPage = (interview) => {
+    setPage("interview");
+    setAuthMode(null);
+    setIsAccountMenuOpen(false);
+    // store selected interview in state to pass to InterviewPage
+    setCurrentUser((u) => u); // no-op to keep user
+    // use sessionStorage to keep interview during navigation
+    try {
+      sessionStorage.setItem("currentInterview", JSON.stringify(interview));
+    } catch {}
     scrollTop();
   };
 
@@ -211,7 +239,20 @@ function App() {
           onComplete={handleAuthComplete}
         />
       ) : page === "home" && isAuthenticated ? (
-        <Home user={currentUser} onViewProfile={openProfile} />
+        <Home user={currentUser} onViewProfile={openProfile} onOpenDashboard={openDashboard} />
+      ) : page === "dashboard" && isAuthenticated ? (
+        <Dashboard onCreateInterview={openInterviewPage} onStartInterview={openInterviewPage} />
+      ) : page === "interview" && isAuthenticated ? (
+        <InterviewPage
+          onDone={(result) => {
+            // result may be undefined (simple done) or { view: 'feedback', payload }
+            if (result && result.view === "feedback") {
+              setPage("feedback");
+            } else {
+              goHome();
+            }
+          }}
+        />
       ) : (
         <>
           <section className="hero" id="home">
@@ -284,6 +325,10 @@ function App() {
           </section>
         </>
       )}
+
+      {page === "feedback" && isAuthenticated ? (
+        <Feedback onDone={({ view }) => setPage(view || "home")} />
+      ) : null}
 
       <footer>
         <p>© 2026 MockMate AI. All rights reserved.</p>

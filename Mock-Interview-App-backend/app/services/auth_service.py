@@ -33,12 +33,14 @@ def _hash_reset_token(token: str) -> str:
 
 
 def register_user(db: Session, full_name: Optional[str], email: str, target_role: Optional[str], password: str):
+	email = email.strip().lower()
 	hashed = get_password_hash(password)
 	user = create_user(db, full_name, email, target_role, hashed)
 	return user
 
 
 def authenticate_user(db: Session, email: str, password: str):
+	email = email.strip().lower()
 	user = get_user_by_email(db, email)
 	if not user:
 		return None

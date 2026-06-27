@@ -1,7 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.schemas.user_schema import UserCreate, UserOut, UserLogin
+from app.schemas.user_schema import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    ResetPasswordRequest,
+    UserCreate,
+    UserOut,
+    UserLogin,
+)
 from app.schemas.token_schema import Token
 from app.core.database import get_db
 from app.services import auth_service
@@ -32,6 +39,23 @@ def login(form_data: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
     token = auth_service.create_token_for_user(user)
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    return auth_service.create_password_reset_for_email(db, payload.email)
+
+
+@router.post("/reset-password")
+def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    if len(payload.new_password) < 8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters")
+
+    updated = auth_service.reset_password_with_token(db, payload.token, payload.new_password)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
+
+    return {"message": "Password reset successfully"}
 
 
 

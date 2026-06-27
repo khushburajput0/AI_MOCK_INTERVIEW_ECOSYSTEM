@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import auth_router, profile_router, interview_router, qa_router
 from app.core.database import engine, Base, get_engine
+from app.core.schema_compat import ensure_schema_compat
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ async def startup_event():
         from app.models import email_verification as _email_verification_module
 
         Base.metadata.create_all(bind=eng)
+        ensure_schema_compat(eng)
         logger.info("Database connected and tables ensured.")
     except Exception as exc:
         logger.exception("Failed to connect to the database on startup: %s", exc)

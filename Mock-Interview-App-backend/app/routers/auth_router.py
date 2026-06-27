@@ -3,14 +3,15 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.schemas.user_schema import (
+    EmailVerificationRequest,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
+    ResendVerificationRequest,
     ResetPasswordRequest,
     UserCreate,
     UserOut,
     UserLogin,
 )
-from app.schemas.user_schema import EmailVerificationRequest, ResendVerificationRequest, UserCreate, UserOut, UserLogin
 from app.schemas.token_schema import Token
 from app.core.database import get_db
 from app.services import auth_service
@@ -77,6 +78,8 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
 
     return {"message": "Password reset successfully"}
+
+
 @router.post("/verify-email", response_model=Token)
 def verify_email(payload: EmailVerificationRequest, db: Session = Depends(get_db)):
     user = auth_service.verify_email_otp(db, payload.email, payload.otp)

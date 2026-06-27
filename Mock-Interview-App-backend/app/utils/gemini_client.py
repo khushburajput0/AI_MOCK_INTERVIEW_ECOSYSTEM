@@ -21,6 +21,7 @@ class GeminiClient:
       GOOGLE_API_KEY - alternate Gemini API key env var
       GEMINI_MODEL - optional model name, defaults to gemini-flash-latest
       GEMINI_MAX_OUTPUT_TOKENS - optional max output tokens, defaults to 4096
+      GEMINI_TIMEOUT_SECONDS - optional request timeout, defaults to 30
       GEMINI_API_URL - optional override of the API URL
     """
 
@@ -29,17 +30,17 @@ class GeminiClient:
         api_key: Optional[str] = None,
         api_url: Optional[str] = None,
         model: Optional[str] = None,
-        timeout: int = 15,
+        timeout: Optional[int] = None,
     ):
         # prefer explicit args, then settings from .env via pydantic Settings
         self.api_key = api_key or getattr(settings, "GOOGLE_API_KEY", None) or getattr(settings, "GEMINI_API_KEY", None)
         self.api_url = api_url or getattr(settings, "GEMINI_API_URL", None)
         self.model = model or getattr(settings, "GEMINI_MODEL", None) or "gemini-flash-latest"
         self.max_output_tokens = getattr(settings, "GEMINI_MAX_OUTPUT_TOKENS", 4096) or 4096
+        self.timeout = timeout or getattr(settings, "GEMINI_TIMEOUT_SECONDS", 30) or 30
         # Gemini generateContent endpoint. Can be overridden with GEMINI_API_URL.
         if not self.api_url:
             self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
-        self.timeout = timeout
 
     def generate(self, prompt: str) -> list | str:
         headers = {"Content-Type": "application/json"}

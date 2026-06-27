@@ -3,6 +3,7 @@ import json
 import re
 import logging
 import time
+import httpx
 
 from app.repository.qa_repository import create_questions_for_interview
 from app.utils.gemini_client import GeminiAPIError, GeminiClient
@@ -14,6 +15,7 @@ from app.repository.qa_repository import save_feedback as repo_save_feedback
 logger = logging.getLogger(__name__)
 
 _GEMINI_QUOTA_COOLDOWN_SECONDS = 60
+_GEMINI_TRANSIENT_COOLDOWN_SECONDS = 30
 _gemini_quota_blocked_until = 0.0
 _last_generation_source = "unknown"
 _last_generation_error = None
@@ -217,8 +219,8 @@ def generate_questions_with_model(client, job_role: str, job_description: str, y
     _last_generation_error = None
 
     if api_key and time.monotonic() < _gemini_quota_blocked_until:
-        error = "Gemini quota cooldown is active after a previous rate-limit response"
-        logger.warning("Skipping Gemini question generation while quota cooldown is active")
+        error = "Gemini cooldown is active after a previous quota or transient service error"
+        logger.warning("Skipping Gemini question generation while cooldown is active")
         _last_generation_source = "fallback"
         _last_generation_error = error
         return _mark_questions_source(_fallback_questions(job_role, job_description, years_experience), "fallback", error)
@@ -239,13 +241,22 @@ def generate_questions_with_model(client, job_role: str, job_description: str, y
             _last_generation_error = f"Gemini returned no usable JSON. Raw response preview: {str(res)[:500]!r}"
             logger.warning("Gemini returned no usable interview questions. Raw response preview: %r", str(res)[:500])
     except Exception as e:
-        logger.exception("Gemini question generation failed: %s", e)
-        if isinstance(e, GeminiAPIError) and e.status_code == 429:
-            retry_after = e.retry_after or _GEMINI_QUOTA_COOLDOWN_SECONDS
-            _gemini_quota_blocked_until = time.monotonic() + max(retry_after, _GEMINI_QUOTA_COOLDOWN_SECONDS)
+        if isinstance(e, GeminiAPIError) and e.status_code in {429, 500, 502, 503, 504}:
+            logger.warning("Gemini question generation temporarily unavailable (%s): %s", e.status_code, e)
+            default_cooldown = _GEMINI_QUOTA_COOLDOWN_SECONDS if e.status_code == 429 else _GEMINI_TRANSIENT_COOLDOWN_SECONDS
+            retry_after = e.retry_after or default_cooldown
+            _gemini_quota_blocked_until = time.monotonic() + max(retry_after, default_cooldown)
             _last_generation_source = "fallback"
             _last_generation_error = str(e)
             return _mark_questions_source(_fallback_questions(job_role, job_description, years_experience), "fallback", str(e))
+        if isinstance(e, httpx.TimeoutException):
+            error = "Gemini request timed out before returning a response"
+            logger.warning("%s: %s", error, e)
+            _gemini_quota_blocked_until = time.monotonic() + _GEMINI_TRANSIENT_COOLDOWN_SECONDS
+            _last_generation_source = "fallback"
+            _last_generation_error = error
+            return _mark_questions_source(_fallback_questions(job_role, job_description, years_experience), "fallback", error)
+        logger.exception("Gemini question generation failed: %s", e)
         if api_key:
             status_code = e.status_code if isinstance(e, GeminiAPIError) else 502
             detail = e.detail if isinstance(e, GeminiAPIError) else str(e)

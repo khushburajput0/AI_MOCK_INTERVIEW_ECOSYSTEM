@@ -144,12 +144,17 @@ def list_questions(interview_id: int, db: Session = Depends(get_db), user=Depend
 
 @router.post("/answer")
 def submit_answer(payload: SubmitAnswerPayload, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    _get_user_interview(db, payload.interview_id, user)
+    question_ids = {q.id for q in list_questions_for_interview(db, payload.interview_id)}
+    if payload.question_id not in question_ids:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found for this interview")
     ans = save_answer(db, payload.interview_id, payload.question_id, payload.user_text, payload.confidence)
     return {"id": ans.id}
 
 
 @router.post("/finalize/{interview_id}")
 def finalize_interview(interview_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    _get_user_interview(db, interview_id, user)
     # Compute scores using the model client via qa_service
     # score_answers_for_interview will persist per-question feedback and return a summary
     client = None

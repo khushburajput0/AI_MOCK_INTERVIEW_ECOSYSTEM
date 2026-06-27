@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-flash-latest"
     GEMINI_MAX_OUTPUT_TOKENS: int = 4096
+    GEMINI_TIMEOUT_SECONDS: int = 30
     GEMINI_API_URL: Optional[str] = None
 
 

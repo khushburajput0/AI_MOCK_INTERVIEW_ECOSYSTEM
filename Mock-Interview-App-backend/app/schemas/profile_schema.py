@@ -18,3 +18,4 @@ class ProfileStats(BaseModel):
     best_score: float | None
     account_created_at: datetime
     latest_future_interview: datetime | None
+    latest_completed_interview: datetime | None

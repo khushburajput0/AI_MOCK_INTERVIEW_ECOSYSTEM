@@ -1,10 +1,7 @@
 from datetime import datetime, timedelta
 import hashlib
 import secrets
-from datetime import timedelta
-from datetime import datetime
 from typing import Optional
-import secrets
 
 from sqlalchemy.orm import Session
 
@@ -15,7 +12,6 @@ from app.repository.password_reset_repository import (
 	mark_password_reset_token_used,
 )
 from app.repository.user_repository import get_user_by_email, get_user_by_id, create_user, update_user_password
-from app.repository.user_repository import get_user_by_email, create_user
 from app.repository.email_verification_repository import (
 	create_email_verification,
 	expire_active_verifications,

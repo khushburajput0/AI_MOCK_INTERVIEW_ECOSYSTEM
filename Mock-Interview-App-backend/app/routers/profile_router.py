@@ -23,7 +23,8 @@ def get_my_profile(current_user=Depends(get_current_user), db: Session = Depends
     total = count_completed_interviews(db, user.id)
     avg = average_score(db, user.id)
     best = best_score(db, user.id)
-    latest = latest_completed_interview(db, user.id)
+    latest_completed = latest_completed_interview(db, user.id)
+    upcoming = latest_future_interview(db, user.id)
 
     return {
         "full_name": user.full_name,
@@ -32,5 +33,6 @@ def get_my_profile(current_user=Depends(get_current_user), db: Session = Depends
         "average_score": avg,
         "best_score": best,
         "account_created_at": user.created_at,
-        "latest_future_interview": latest,
+        "latest_future_interview": upcoming,
+        "latest_completed_interview": latest_completed,
     }

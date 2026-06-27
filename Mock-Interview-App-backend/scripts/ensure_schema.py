@@ -3,6 +3,13 @@
 Run with the project's Python (virtualenv) so it uses the same DB settings.
 Example: env/bin/python scripts/ensure_schema.py
 """
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from app.core.database import get_engine
 
 stmts = [
@@ -17,6 +24,11 @@ stmts = [
     "CREATE TABLE IF NOT EXISTS public.email_verifications (\n        id serial PRIMARY KEY,\n        user_id integer NOT NULL REFERENCES users(id),\n        otp_hash varchar NOT NULL,\n        expires_at timestamp NOT NULL,\n        is_used boolean DEFAULT false NOT NULL,\n        created_at timestamp DEFAULT now() NOT NULL\n    );",
     "CREATE INDEX IF NOT EXISTS ix_email_verifications_id ON public.email_verifications(id);",
     "CREATE INDEX IF NOT EXISTS ix_email_verifications_user_id ON public.email_verifications(user_id);",
+    # password reset tokens
+    "CREATE TABLE IF NOT EXISTS public.password_reset_tokens (\n        id serial PRIMARY KEY,\n        user_id integer NOT NULL REFERENCES users(id),\n        token_hash varchar NOT NULL UNIQUE,\n        expires_at timestamp NOT NULL,\n        used_at timestamp,\n        created_at timestamp DEFAULT now() NOT NULL\n    );",
+    "CREATE INDEX IF NOT EXISTS ix_password_reset_tokens_id ON public.password_reset_tokens(id);",
+    "CREATE INDEX IF NOT EXISTS ix_password_reset_tokens_user_id ON public.password_reset_tokens(user_id);",
+    "CREATE INDEX IF NOT EXISTS ix_password_reset_tokens_token_hash ON public.password_reset_tokens(token_hash);",
     # interviews score and completed_at
     "ALTER TABLE public.interviews ADD COLUMN IF NOT EXISTS score DOUBLE PRECISION;",
     "ALTER TABLE public.interviews ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP;",
@@ -28,7 +40,7 @@ stmts = [
 def main():
     eng = get_engine()
     print("Connecting to database via engine: ", eng)
-    with eng.connect() as conn:
+    with eng.begin() as conn:
         for s in stmts:
             print("Executing:", s)
             conn.exec_driver_sql(s)

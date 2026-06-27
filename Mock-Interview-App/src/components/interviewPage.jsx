@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from "react";
 
 const API_BASE = "http://127.0.0.1:8000";
 
+const normalizeQuestions = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.questions)) return payload.questions;
+  if (Array.isArray(payload?.created)) return payload.created;
+  return [];
+};
+
 function InterviewPage({ onDone }) {
   const [interview, setInterview] = useState(null);
   const [enabled, setEnabled] = useState(false);
@@ -26,8 +33,9 @@ function InterviewPage({ onDone }) {
       const res = await fetch(`${API_BASE}/qa/interview/${interview.id}`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
-        if (data.length) {
-          setQuestions(data);
+        const loadedQuestions = normalizeQuestions(data);
+        if (loadedQuestions.length) {
+          setQuestions(loadedQuestions);
           return;
         }
       }
@@ -40,10 +48,16 @@ function InterviewPage({ onDone }) {
       });
       if (genRes.ok) {
         const gen = await genRes.json();
-        // reload list
+        const generatedQuestions = normalizeQuestions(gen);
+        if (generatedQuestions.length) {
+          setQuestions(generatedQuestions);
+          return;
+        }
+
+        // Fallback for APIs that generate successfully but do not return items.
         const res2 = await fetch(`${API_BASE}/qa/interview/${interview.id}`, { headers: { Authorization: `Bearer ${token}` } });
         const data2 = await res2.json();
-        setQuestions(data2);
+        setQuestions(normalizeQuestions(data2));
       }
     }
 
@@ -149,7 +163,7 @@ function InterviewPage({ onDone }) {
                     </button>
                   ))}
                 </div>
-                <div style={{ marginTop: 18 }}>{currentQuestion.prompt}</div>
+                <div style={{ marginTop: 18 }}>{currentQuestion.prompt || currentQuestion.question}</div>
 
                 <div style={{ marginTop: 18 }}>
                   <button onClick={() => (listening ? stopListeningAndSubmit() : startListening())} className="primary">

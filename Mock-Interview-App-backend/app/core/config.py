@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     DB_CONNECTION: Optional[str] = None
     # Gemini / LLM config - loaded from .env via BaseSettings
     GEMINI_API_KEY: Optional[str] = None
+    GOOGLE_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-flash-latest"
+    GEMINI_MAX_OUTPUT_TOKENS: int = 4096
     GEMINI_API_URL: Optional[str] = None
 
 

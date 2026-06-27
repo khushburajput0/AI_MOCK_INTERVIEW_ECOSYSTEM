@@ -78,6 +78,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES=60
 # postgres://<user>:<password>@<host>:<port>/<db_name>
 # If the password contains special characters (like @), percent-encode them (for example @ -> %40).
 DB_CONNECTION=postgresql+psycopg2://rishudb:Rishu%408279@localhost:5432/rishudb
+
+# Gemini API
+# Prefer GOOGLE_API_KEY or GEMINI_API_KEY from Google AI Studio.
+# GOOGLE_API_KEY takes precedence when both are set.
+GEMINI_API_KEY=replace_with_your_gemini_api_key
+GEMINI_MODEL=gemini-flash-latest
 ```
 
 Example (Neon Postgres, enforce SSL):
@@ -90,6 +96,8 @@ DB_CONNECTION=postgresql://neondb_owner:npg_4m2zAKdkPBlO@ep-wandering-firefly-ad
 Notes:
 - Use a strong `SECRET_KEY` (32+ characters) to avoid JWT warnings and improve security.
 - The app can also fall back to `DATABASE_URL` if `DB_CONNECTION` is not provided.
+- Keep Gemini keys server-side only. If a key is exposed, create a new key in Google AI Studio, update `.env`, and revoke the old key.
+- If Gemini returns quota errors, check the key's Google Cloud project billing/quota in AI Studio. The app will reuse existing generated questions and temporarily fall back to local questions instead of repeatedly calling an exhausted quota.
 
 ## Create the database and user (Postgres)
 

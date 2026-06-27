@@ -146,23 +146,89 @@ function InterviewPage({ onDone }) {
 
   return (
     <main className="interview-page">
-      <h2>Let's Get Started</h2>
-      <div className="grid">
-        <div className="details">
-          <p>Job Role/Job Position: {interview?.job_role || interview?.title}</p>
-          <p>Job Description/Tech Stack: {interview?.job_description}</p>
-          <p>Years of Experience: {interview?.years_experience}</p>
+      <div className="interview-header">
+        <div>
+          <span className="page-tag">Mock interview</span>
+          <h2>Let's Get Started</h2>
+          <p className="page-subtitle">
+            Practice in a realistic setting with webcam review, voice recording, and AI-powered feedback.
+          </p>
+        </div>
 
-          <div style={{ marginTop: 20 }}>
+        {questions.length > 0 && (
+          <div className="interview-summary">
+            <div>
+              <strong>{currentIndex + 1}</strong>
+              <span>Current question</span>
+            </div>
+            <div>
+              <strong>{questions.length}</strong>
+              <span>Total questions</span>
+            </div>
+            <div>
+              <strong>{enabled ? "Camera ready" : "Camera disabled"}</strong>
+              <span>Video status</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="grid">
+        <section className="details">
+          <div className="details-header">
+            <h3>Interview details</h3>
+          </div>
+
+          <div className="detail-row">
+            <span>Role</span>
+            <strong>{interview?.job_role || interview?.title || "N/A"}</strong>
+          </div>
+          <div className="detail-row">
+            <span>Tech stack</span>
+            <strong>{interview?.job_description || "Not provided"}</strong>
+          </div>
+          <div className="detail-row">
+            <span>Experience level</span>
+            <strong>{interview?.years_experience ? `${interview.years_experience} years` : "N/A"}</strong>
+          </div>
+
+          <div className="question-panel">
             {currentQuestion ? (
               <div className="question-card">
+                <div className="question-card-header">
+                  <div>
+                    <h3>Question prompt</h3>
+                    <p className="question-count">Question {currentIndex + 1} of {questions.length}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() => (listening ? stopListeningAndSubmit() : startListening())}
+                  >
+                    {listening ? "Stop & Submit" : "Record Answer"}
+                  </button>
+                </div>
+
+                <div className="question-text">{currentQuestion.prompt}</div>
+
+                <div className="transcript-box">
+                  {transcript ? transcript : <span className="transcript-placeholder">Your answer transcript will appear here after you record.</span>}
+                </div>
+
                 <div className="question-tabs">
                   {questions.map((_, idx) => (
-                    <button key={idx} className={idx === currentIndex ? "primary" : "secondary"} onClick={() => setCurrentIndex(idx)}>
+                    <button
+                      key={idx}
+                      type="button"
+                      className={idx === currentIndex ? "primary" : "secondary"}
+                      onClick={() => setCurrentIndex(idx)}
+                    >
                       Question #{idx + 1}
                     </button>
                   ))}
                 </div>
+<<<<<<< Updated upstream
                 <div style={{ marginTop: 18 }}>{currentQuestion.prompt || currentQuestion.question}</div>
 
                 <div style={{ marginTop: 18 }}>
@@ -170,25 +236,48 @@ function InterviewPage({ onDone }) {
                     {listening ? "Stop & Submit" : "Record Answer"}
                   </button>
                 </div>
+=======
+>>>>>>> Stashed changes
               </div>
             ) : (
-              <p>Preparing questions…</p>
+              <div className="question-card">
+                <p>Preparing questions…</p>
+              </div>
             )}
           </div>
-        </div>
+        </section>
 
-        <div className="camera">
-          <div className="camera-placeholder">
-            <video ref={videoRef} autoPlay muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <aside className="camera">
+          <div className="camera-card">
+            <div className="camera-card-header">
+              <h3>Live camera preview</h3>
+            </div>
+
+            <div className="camera-placeholder">
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+
+            <div className="camera-meta">
+              <p>Use a clean, quiet space and look directly at the camera for the best recording results.</p>
+            </div>
+
+            <div className="camera-actions">
+              {!enabled ? (
+                <button className="primary" onClick={handleEnable}>
+                  Enable webcam & microphone
+                </button>
+              ) : (
+                <button className="secondary" onClick={() => alert("Already enabled")}>Camera enabled</button>
+              )}
+            </div>
           </div>
-          <div className="camera-actions">
-            {!enabled ? (
-              <button className="primary" onClick={handleEnable}>
-                Enable Web Cam and Microphone
-              </button>
-            ) : null}
-          </div>
-        </div>
+        </aside>
       </div>
     </main>
   );

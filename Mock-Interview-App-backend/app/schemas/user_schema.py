@@ -20,3 +20,12 @@ class UserLogin(BaseModel):
 
     email: EmailStr
     password: str
+
+
+class EmailVerificationRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr

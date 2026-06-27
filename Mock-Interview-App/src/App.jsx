@@ -24,6 +24,16 @@ const getStoredUser = () => {
   }
 };
 
+const getDisplayName = (user) => {
+  const rawName = user?.full_name || user?.name || user?.username || "";
+  if (rawName && String(rawName).trim()) return String(rawName).trim();
+
+  const email = user?.email || "";
+  if (email.includes("@")) return email.split("@")[0];
+
+  return "";
+};
+
 function App() {
   const [authMode, setAuthMode] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(() =>
@@ -124,8 +134,17 @@ function App() {
 
   const handleAuthComplete = (data) => {
     const user = data?.user || data?.user_info || data?.profile || data;
+    const displayName = getDisplayName(user) || getDisplayName(data) || "";
     const userInfo = {
-      full_name: user?.full_name || user?.name || data?.full_name || "",
+      full_name:
+        user?.full_name ||
+        user?.name ||
+        user?.username ||
+        data?.full_name ||
+        data?.name ||
+        data?.username ||
+        "",
+      username: user?.username || data?.username || displayName,
       email: user?.email || data?.email || "",
       photo_url: user?.photo_url || user?.profile_photo || user?.avatar || "",
     };
@@ -160,8 +179,7 @@ function App() {
   };
 
   const getUserInitial = () => {
-    const displayName =
-      currentUser?.full_name || currentUser?.name || currentUser?.email || "U";
+    const displayName = getDisplayName(currentUser) || "U";
     return displayName.trim().charAt(0).toUpperCase() || "U";
   };
 
@@ -270,7 +288,6 @@ function App() {
                 >
                   Get Started
                 </button>
-                <button className="secondary">Try Demo</button>
               </div>
 
               <div className="stats">

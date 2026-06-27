@@ -9,9 +9,16 @@ class Settings(BaseSettings):
     APP_NAME: str = "Mock Interview App"
     SECRET_KEY: str = "changeme"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
+    EMAIL_OTP_EXPIRE_MINUTES: int = 10
 
     DATABASE_URL: Optional[str] = None
     DB_CONNECTION: Optional[str] = None
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM_EMAIL: Optional[str] = None
+    SMTP_USE_TLS: bool = True
     # Gemini / LLM config - loaded from .env via BaseSettings
     GEMINI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None

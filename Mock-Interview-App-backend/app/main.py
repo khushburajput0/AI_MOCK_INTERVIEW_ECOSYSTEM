@@ -38,6 +38,7 @@ async def startup_event():
         from app.models import interview as _interview_module
         from app.models import revoked_token as _revoked_module
         from app.models import qa as _qa_module
+        from app.models import email_verification as _email_verification_module
 
         Base.metadata.create_all(bind=eng)
         logger.info("Database connected and tables ensured.")

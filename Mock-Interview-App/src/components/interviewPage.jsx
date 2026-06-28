@@ -17,6 +17,8 @@ function InterviewPage({ onDone }) {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const recognitionRef = useRef(null);
+  const shouldListenRef = useRef(false);
+  const transcriptRef = useRef("");
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -81,31 +83,52 @@ function InterviewPage({ onDone }) {
       alert("SpeechRecognition is not supported in this browser");
       return;
     }
+    transcriptRef.current = "";
+    setTranscript("");
+
     const r = new SpeechRecognition();
     r.lang = "en-US";
-    r.interimResults = false;
+    r.continuous = true;
+    r.interimResults = true;
     r.onresult = (e) => {
-      const text = Array.from(e.results).map((r) => r[0].transcript).join(" ");
+      const text = Array.from(e.results).map((result) => result[0].transcript).join(" ");
+      transcriptRef.current = text;
       setTranscript(text);
     };
-    r.onend = () => setListening(false);
+    r.onend = () => {
+      if (shouldListenRef.current) {
+        try {
+          r.start();
+        } catch (err) {
+          console.error("Could not restart speech recognition:", err);
+          shouldListenRef.current = false;
+          setListening(false);
+        }
+        return;
+      }
+
+      setListening(false);
+    };
+    shouldListenRef.current = true;
     r.start();
     recognitionRef.current = r;
     setListening(true);
   };
 
   const stopListeningAndSubmit = async () => {
+    shouldListenRef.current = false;
     if (recognitionRef.current) recognitionRef.current.stop();
     setListening(false);
     const q = questions[currentIndex];
     const token = localStorage.getItem("authToken");
+    const answerText = transcriptRef.current || transcript;
 
     try {
-      console.log("Submitting answer for question", q?.id, q?.prompt, "transcript:", transcript);
+      console.log("Submitting answer for question", q?.id, q?.prompt, "transcript:", answerText);
       const res = await fetch(`${API_BASE}/qa/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ interview_id: interview.id, question_id: q.id, user_text: transcript, confidence: null }),
+        body: JSON.stringify({ interview_id: interview.id, question_id: q.id, user_text: answerText, confidence: null }),
       });
 
       if (!res.ok) {
@@ -118,6 +141,7 @@ function InterviewPage({ onDone }) {
     } catch (err) {
       console.error("Network error submitting answer:", err);
     } finally {
+      transcriptRef.current = "";
       setTranscript("");
       // Advance UI regardless of submit outcome
       if (currentIndex + 1 < questions.length) {
@@ -226,6 +250,7 @@ function InterviewPage({ onDone }) {
                       key={idx}
                       type="button"
                       className={idx === currentIndex ? "primary" : "secondary"}
+                      disabled={listening}
                       onClick={() => setCurrentIndex(idx)}
                     >
                       Question #{idx + 1}

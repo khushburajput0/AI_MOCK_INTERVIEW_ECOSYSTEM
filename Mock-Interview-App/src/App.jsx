@@ -10,7 +10,7 @@ import Dashboard from "./components/dashboard";
 import InterviewPage from "./components/interviewPage";
 import Feedback from "./components/feedback";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://ai-mock-interview-ecosystem-21cm.onrender.com";
 
 const getStoredUser = () => {
   const storedUser = localStorage.getItem("authUser");

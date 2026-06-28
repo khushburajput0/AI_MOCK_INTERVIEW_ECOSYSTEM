@@ -24,7 +24,7 @@ function Profile() {
       return;
     }
 
-    const API_BASE = "http://127.0.0.1:8000";
+    const API_BASE = "https://ai-mock-interview-ecosystem-21cm.onrender.com";
 
     async function load() {
       setLoading(true);

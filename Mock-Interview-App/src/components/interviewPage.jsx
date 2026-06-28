@@ -155,22 +155,24 @@ function InterviewPage({ onDone }) {
           </p>
         </div>
 
-        {questions.length > 0 && (
-          <div className="interview-summary">
-            <div>
-              <strong>{currentIndex + 1}</strong>
-              <span>Current question</span>
+        <div className="interview-header-right">
+          {questions.length > 0 && (
+            <div className="interview-summary">
+              <div>
+                <strong>{currentIndex + 1}</strong>
+                <span>Current question</span>
+              </div>
+              <div>
+                <strong>{questions.length}</strong>
+                <span>Total questions</span>
+              </div>
+              <div>
+                <strong>{enabled ? "Camera ready" : "Camera disabled"}</strong>
+                <span>Video status</span>
+              </div>
             </div>
-            <div>
-              <strong>{questions.length}</strong>
-              <span>Total questions</span>
-            </div>
-            <div>
-              <strong>{enabled ? "Camera ready" : "Camera disabled"}</strong>
-              <span>Video status</span>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="grid">
@@ -200,17 +202,19 @@ function InterviewPage({ onDone }) {
                     <h3>Question prompt</h3>
                     <p className="question-count">Question {currentIndex + 1} of {questions.length}</p>
                   </div>
+                </div>
 
+                <div className="question-text">{currentQuestion.prompt}</div>
+
+                <div className="question-action-row">
                   <button
                     type="button"
-                    className="primary"
+                    className={`question-record-button ${listening ? "is-submitting" : "is-recording"}`}
                     onClick={() => (listening ? stopListeningAndSubmit() : startListening())}
                   >
                     {listening ? "Stop & Submit" : "Record Answer"}
                   </button>
                 </div>
-
-                <div className="question-text">{currentQuestion.prompt}</div>
 
                 <div className="transcript-box">
                   {transcript ? transcript : <span className="transcript-placeholder">Your answer transcript will appear here after you record.</span>}
@@ -228,16 +232,6 @@ function InterviewPage({ onDone }) {
                     </button>
                   ))}
                 </div>
-<<<<<<< Updated upstream
-                <div style={{ marginTop: 18 }}>{currentQuestion.prompt || currentQuestion.question}</div>
-
-                <div style={{ marginTop: 18 }}>
-                  <button onClick={() => (listening ? stopListeningAndSubmit() : startListening())} className="primary">
-                    {listening ? "Stop & Submit" : "Record Answer"}
-                  </button>
-                </div>
-=======
->>>>>>> Stashed changes
               </div>
             ) : (
               <div className="question-card">

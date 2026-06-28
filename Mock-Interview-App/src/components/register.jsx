@@ -15,14 +15,11 @@ function Register({ mode, onModeChange, onComplete }) {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState("");
-<<<<<<< Updated upstream
   const [success, setSuccess] = useState("");
-=======
   const [message, setMessage] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
   const [otp, setOtp] = useState("");
   const [verificationMode, setVerificationMode] = useState(null);
->>>>>>> Stashed changes
 
   const API_BASE = "http://127.0.0.1:8000";
   const otpDigits = Array.from({ length: 6 }, (_, index) => otp[index] || "");
@@ -35,6 +32,9 @@ function Register({ mode, onModeChange, onComplete }) {
     const visibleEnd = namePart.length > 4 ? namePart.slice(-2) : "";
     return `${visibleStart}${"*".repeat(Math.max(3, namePart.length - 4))}${visibleEnd}@${domain}`;
   };
+
+  const normalizeEmail = (value) => (value || "").trim().toLowerCase();
+  const normalizePassword = (value) => (value || "").trim();
 
   const parseResponse = async (res) => {
     const text = await res.text();
@@ -50,13 +50,24 @@ function Register({ mode, onModeChange, onComplete }) {
   const getErrorMessage = (data, fallback = "Request failed") =>
     data?.detail || data?.error || data?.message || fallback;
 
+  const extractToken = (obj) => {
+    if (!obj) return null;
+    return obj.token || obj.access_token || obj.access || obj.auth_token || obj.refresh;
+  };
+
   const switchMode = (nextMode) => {
     setError("");
     setSuccess("");
+    setMessage("");
+    setOtp("");
     if (nextMode !== "reset-password") {
       setResetToken("");
       setNewPassword("");
       setConfirmNewPassword("");
+    }
+    if (nextMode !== "verification") {
+      setPendingVerification(null);
+      setVerificationMode(null);
     }
     onModeChange(nextMode);
   };
@@ -64,12 +75,12 @@ function Register({ mode, onModeChange, onComplete }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
-<<<<<<< Updated upstream
     setSuccess("");
-=======
     setMessage("");
->>>>>>> Stashed changes
     setLoading(true);
+
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedPassword = normalizePassword(password);
 
     try {
       let res;
@@ -77,24 +88,20 @@ function Register({ mode, onModeChange, onComplete }) {
         res = await fetch(`${API_BASE}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full_name: name, email, target_role: role, password }),
+          body: JSON.stringify({ full_name: name.trim(), email: normalizedEmail, target_role: role, password: normalizedPassword }),
         });
       } else {
-        // Note: removed accidental double-slash in your provided URL
         res = await fetch(`${API_BASE}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ email: normalizedEmail, password: normalizedPassword }),
         });
       }
 
       const data = await parseResponse(res);
+      const token = extractToken(data);
 
       if (!res.ok) {
-<<<<<<< Updated upstream
-        throw new Error(getErrorMessage(data));
-=======
-        // backend may send { detail: '...' } or { error: '...' }
         const message = data?.detail || data?.error || data?.message || "Request failed";
         if (!isRegister && res.status === 403 && message.toLowerCase().includes("not verified")) {
           setPendingVerification({ email });
@@ -104,36 +111,9 @@ function Register({ mode, onModeChange, onComplete }) {
           return;
         }
         throw new Error(message);
->>>>>>> Stashed changes
       }
 
-      const extractToken = (obj) => {
-        if (!obj) return null;
-        return obj.token || obj.access_token || obj.access || obj.auth_token || obj.refresh;
-      };
-
-      let token = extractToken(data);
-
-<<<<<<< Updated upstream
-      // If registering and backend didn't return a token, try logging in to obtain one
       if (isRegister && !token) {
-        try {
-          const loginRes = await fetch(`${API_BASE}/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
-          const loginData = await parseResponse(loginRes);
-          token = extractToken(loginData);
-          // Some backends return { access: 'token' } or { access_token }
-          if (!token && loginData?.data && typeof loginData.data === 'object') {
-            token = extractToken(loginData.data);
-          }
-        } catch {
-          // ignore - we will surface error below if token missing
-        }
-=======
-      if (isRegister) {
         const registrationName = name?.trim() || data?.full_name || data?.name || data?.username || "";
         setPendingVerification({
           full_name: registrationName,
@@ -144,14 +124,12 @@ function Register({ mode, onModeChange, onComplete }) {
         setVerificationMode("register");
         setMessage("We sent a verification code to your email.");
         return;
->>>>>>> Stashed changes
       }
 
       if (token) {
         localStorage.setItem("authToken", token);
       }
 
-      // Include form identity because the login API currently returns only a token.
       if (onComplete) {
         const displayName =
           pendingVerification?.full_name ||
@@ -178,18 +156,19 @@ function Register({ mode, onModeChange, onComplete }) {
     }
   }
 
-<<<<<<< Updated upstream
   async function handleForgotPassword(event) {
     event.preventDefault();
     setError("");
     setSuccess("");
     setLoading(true);
 
+    const normalizedEmail = normalizeEmail(email);
+
     try {
       const res = await fetch(`${API_BASE}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: normalizedEmail }),
       });
       const data = await parseResponse(res);
 
@@ -198,12 +177,15 @@ function Register({ mode, onModeChange, onComplete }) {
       }
 
       const token = data?.reset_token || "";
-
       setResetToken(token);
       onModeChange("reset-password");
     } catch (err) {
       setError(err.message || "An unexpected error occurred");
-=======
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleVerifyOtp(event) {
     event.preventDefault();
     setError("");
@@ -214,32 +196,30 @@ function Register({ mode, onModeChange, onComplete }) {
       const res = await fetch(`${API_BASE}/auth/verify-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: pendingVerification.email, otp }),
+        body: JSON.stringify({ email: normalizeEmail(pendingVerification?.email), otp }),
       });
-      const data = await res.json();
+      const data = await parseResponse(res);
 
       if (!res.ok) {
         const message = data?.detail || data?.error || data?.message || "Invalid verification code";
         throw new Error(message);
       }
 
-      const token = data?.access_token || data?.token || data?.access;
+      const token = extractToken(data);
       if (token) {
         localStorage.setItem("authToken", token);
       }
 
-      if (onComplete) {
+      if (onComplete && pendingVerification) {
         onComplete(pendingVerification);
       }
     } catch (err) {
       setError(err.message || "Could not verify email");
->>>>>>> Stashed changes
     } finally {
       setLoading(false);
     }
   }
 
-<<<<<<< Updated upstream
   async function handleResetPassword(event) {
     event.preventDefault();
     setError("");
@@ -304,7 +284,7 @@ function Register({ mode, onModeChange, onComplete }) {
       : isResetPassword
         ? "Paste your reset token and choose a new password to get back to your mock interviews."
         : "Login to resume mock interviews, review feedback, and keep improving your confidence before the real interview.";
-=======
+
   async function handleResendOtp() {
     setError("");
     setMessage("");
@@ -410,7 +390,6 @@ function Register({ mode, onModeChange, onComplete }) {
       </main>
     );
   }
->>>>>>> Stashed changes
 
   return (
     <main className={`auth-page ${isRegister ? "auth-page-register" : "auth-page-login"}`}>

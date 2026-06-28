@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import aiToolsImage from "./assets/ai-tools.webp";
 import logo from "./assets/mock.jpg";
+import interviewVisual from "./assets/p.webp";
 import Home from "./components/home";
 import Profile from "./components/profile";
 import Register from "./components/register";
@@ -119,6 +120,18 @@ function App() {
     scrollTop();
   };
 
+  const openFeedback = () => {
+    if (!isAuthenticated) {
+      openAuthPage("login");
+      return;
+    }
+
+    setPage("feedback");
+    setAuthMode(null);
+    setIsAccountMenuOpen(false);
+    scrollTop();
+  };
+
   const openInterviewPage = (interview) => {
     setPage("interview");
     setAuthMode(null);
@@ -209,35 +222,52 @@ function App() {
 
         <ul className="nav-links">
           {isAuthenticated ? (
-            <li className="account-menu" ref={accountMenuRef}>
-              <button
-                className="avatar-menu-button"
-                onClick={() => setIsAccountMenuOpen((isOpen) => !isOpen)}
-                aria-expanded={isAccountMenuOpen}
-                aria-haspopup="menu"
-                aria-label="Open account menu"
-              >
-                {currentUser?.photo_url ? (
-                  <img
-                    src={currentUser.photo_url}
-                    alt=""
-                    className="nav-avatar-img"
-                  />
-                ) : (
-                  <span className="nav-avatar-initial">{getUserInitial()}</span>
+            <>
+              <li>
+                <button className="nav-link-btn" type="button" onClick={goHome}>
+                  Home
+                </button>
+              </li>
+              <li>
+                <button className="nav-link-btn" type="button" onClick={openDashboard}>
+                  Scheduled Interview
+                </button>
+              </li>
+              <li>
+                <button className="nav-link-btn" type="button" onClick={openFeedback}>
+                  Feedback
+                </button>
+              </li>
+              <li className="account-menu" ref={accountMenuRef}>
+                <button
+                  className="avatar-menu-button"
+                  onClick={() => setIsAccountMenuOpen((isOpen) => !isOpen)}
+                  aria-expanded={isAccountMenuOpen}
+                  aria-haspopup="menu"
+                  aria-label="Open account menu"
+                >
+                  {currentUser?.photo_url ? (
+                    <img
+                      src={currentUser.photo_url}
+                      alt=""
+                      className="nav-avatar-img"
+                    />
+                  ) : (
+                    <span className="nav-avatar-initial">{getUserInitial()}</span>
+                  )}
+                </button>
+                {isAccountMenuOpen && (
+                  <div className="account-dropdown" role="menu">
+                    <button type="button" onClick={openProfile} role="menuitem">
+                      Visit Profile
+                    </button>
+                    <button type="button" onClick={handleLogout} role="menuitem">
+                      Logout
+                    </button>
+                  </div>
                 )}
-              </button>
-              {isAccountMenuOpen && (
-                <div className="account-dropdown" role="menu">
-                  <button type="button" onClick={openProfile} role="menuitem">
-                    Visit Profile
-                  </button>
-                  <button type="button" onClick={handleLogout} role="menuitem">
-                    Logout
-                  </button>
-                </div>
-              )}
-            </li>
+              </li>
+            </>
           ) : (
             <li>
               <button className="login-btn" onClick={() => openAuthPage("login")}>
@@ -247,6 +277,12 @@ function App() {
           )}
         </ul>
       </nav>
+
+      {page === "interview" && isAuthenticated ? (
+        <div className="interview-nav-visual">
+          <img src={interviewVisual} alt="Interview preparation" />
+        </div>
+      ) : null}
 
       {page === "profile" && isAuthenticated ? (
         <Profile user={currentUser} />
@@ -271,6 +307,8 @@ function App() {
             }
           }}
         />
+      ) : page === "feedback" && isAuthenticated ? (
+        <Feedback onDone={({ view }) => setPage(view || "home")} />
       ) : (
         <>
           <section className="hero" id="home">
@@ -342,10 +380,6 @@ function App() {
           </section>
         </>
       )}
-
-      {page === "feedback" && isAuthenticated ? (
-        <Feedback onDone={({ view }) => setPage(view || "home")} />
-      ) : null}
 
       <footer>
         <p>© 2026 MockMate AI. All rights reserved.</p>

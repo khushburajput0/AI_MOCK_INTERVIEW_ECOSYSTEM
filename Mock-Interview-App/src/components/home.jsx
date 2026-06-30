@@ -10,7 +10,7 @@ function Home({ user, onViewProfile, onOpenDashboard }) {
     const controller = new AbortController();
     const loadProfile = async () => {
       try {
-        const res = await fetch("https://ai-mock-interview-ecosystem-21cm.onrender.com/profiles/me", {
+        const res = await fetch(" http://127.0.0.1:8000/profiles/me", {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         });

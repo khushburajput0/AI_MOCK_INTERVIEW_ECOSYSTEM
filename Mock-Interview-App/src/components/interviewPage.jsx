@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const API_BASE = "https://ai-mock-interview-ecosystem-21cm.onrender.com";
+const API_BASE = " http://127.0.0.1:8000";
 
 const normalizeQuestions = (payload) => {
   if (Array.isArray(payload)) return payload;

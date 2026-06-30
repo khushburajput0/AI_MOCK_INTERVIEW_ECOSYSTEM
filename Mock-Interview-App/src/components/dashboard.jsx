@@ -1,7 +1,13 @@
 
 import { useEffect, useState } from "react";
 
-const API_BASE = "https://ai-mock-interview-ecosystem-21cm.onrender.com";
+const API_BASE = "http://127.0.0.1:8000";
+
+const isSessionReady = (scheduledAt, now = new Date()) => {
+  if (!scheduledAt) return true;
+  const scheduledTime = new Date(scheduledAt).getTime();
+  return Number.isFinite(scheduledTime) && scheduledTime <= now.getTime();
+};
 
 function Dashboard({ onCreateInterview, onStartInterview }) {
   const [list, setList] = useState([]);
@@ -9,6 +15,15 @@ function Dashboard({ onCreateInterview, onStartInterview }) {
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState({ title: "", job_role: "", job_description: "", years_experience: "", scheduled_at: "" });
   const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [now, setNow] = useState(() => new Date());
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -63,10 +78,10 @@ function Dashboard({ onCreateInterview, onStartInterview }) {
     window.location.reload();
   };
 
-  const upcomingCount = list.filter((item) => new Date(item.scheduled_at) > new Date()).length;
+  const upcomingCount = list.filter((item) => !isSessionReady(item.scheduled_at, now)).length;
   const totalInterviews = list.length;
   const nextInterview = list
-    .filter((item) => new Date(item.scheduled_at) > new Date())
+    .filter((item) => !isSessionReady(item.scheduled_at, now))
     .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))[0];
 
   const openModal = () => {
@@ -119,13 +134,69 @@ function Dashboard({ onCreateInterview, onStartInterview }) {
       }
 
       const data = await res.json();
-      onCreateInterview(data);
+      setList((items) => [data, ...items]);
       setIsOpen(false);
+
+      if (isSessionReady(data.scheduled_at)) {
+        onCreateInterview(data);
+        return;
+      }
+
+      setNotice("Session scheduled. It will be available at the selected time.");
     } catch (err) {
       console.error(err);
       alert(err.message || "Failed to create interview");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleStartInterview = (interview) => {
+    if (!isSessionReady(interview.scheduled_at, now)) {
+      setNotice(`This session starts at ${formattedDate(interview.scheduled_at)}.`);
+      return;
+    }
+
+    setNotice("");
+    onStartInterview(interview);
+  };
+
+  const handleDeleteInterview = async (interview) => {
+    const confirmed = window.confirm("Delete this scheduled session?");
+    if (!confirmed) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      handleAuthFailure("Missing authentication token. Please login again.");
+      return;
+    }
+
+    setDeletingId(interview.id);
+    setNotice("");
+
+    try {
+      const res = await fetch(`${API_BASE}/interviews/${interview.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        if (res.status === 401 || res.status === 403) {
+          handleAuthFailure(err.detail || err.message || "Could not validate credentials");
+          return;
+        }
+        throw new Error(err.detail || err.message || "Failed to delete session");
+      }
+
+      setList((items) => items.filter((item) => item.id !== interview.id));
+      setOpenMenuId(null);
+      setNotice("Session deleted.");
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to delete session");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -144,6 +215,8 @@ function Dashboard({ onCreateInterview, onStartInterview }) {
           + Schedule Session
         </button>
       </div>
+
+      {notice ? <p className="dashboard-notice">{notice}</p> : null}
 
       <div className="dashboard-summary">
         <div className="summary-card">
@@ -176,25 +249,59 @@ function Dashboard({ onCreateInterview, onStartInterview }) {
           </div>
         ) : (
           <div className="cards">
-            {list.map((it) => (
+            {list.map((it) => {
+              const ready = isSessionReady(it.scheduled_at, now);
+
+              return (
               <article className="card" key={it.id}>
                 <div className="card-header">
                   <div>
                     <h4>{it.job_role || it.title}</h4>
                     <p className="card-meta">{formattedDate(it.scheduled_at)} · {it.years_experience ?? "—"} yrs exp</p>
                   </div>
-                  <span className="status-pill">{new Date(it.scheduled_at) > new Date() ? "Upcoming" : "Completed"}</span>
+                  <div className="session-card-controls">
+                    <span className={`status-pill ${ready ? "status-ready" : ""}`}>
+                      {ready ? "Ready" : "Upcoming"}
+                    </span>
+                    <div className="session-menu">
+                      <button
+                        className="session-menu-trigger"
+                        type="button"
+                        onClick={() => setOpenMenuId((id) => (id === it.id ? null : it.id))}
+                        aria-label="Open session options"
+                        aria-expanded={openMenuId === it.id}
+                      >
+                        ⋮
+                      </button>
+                      {openMenuId === it.id ? (
+                        <div className="session-menu-dropdown">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteInterview(it)}
+                            disabled={deletingId === it.id}
+                          >
+                            {deletingId === it.id ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
 
                 <p className="card-description">{it.job_description || "No description provided."}</p>
 
                 <div className="actions">
-                  <button onClick={() => onStartInterview(it)} className="primary">
-                    Start practice
+                  <button
+                    onClick={() => handleStartInterview(it)}
+                    className="primary"
+                    disabled={!ready}
+                  >
+                    {ready ? "Start practice" : "Available at scheduled time"}
                   </button>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

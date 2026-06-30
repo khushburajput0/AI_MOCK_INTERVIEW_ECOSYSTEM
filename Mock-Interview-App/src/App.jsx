@@ -10,7 +10,7 @@ import Dashboard from "./components/dashboard";
 import InterviewPage from "./components/interviewPage";
 import Feedback from "./components/feedback";
 
-const API_BASE = "https://ai-mock-interview-ecosystem-21cm.onrender.com";
+const API_BASE = " http://127.0.0.1:8000";
 
 const getStoredUser = () => {
   const storedUser = localStorage.getItem("authUser");
@@ -191,6 +191,17 @@ function App() {
     }
   };
 
+  const handleAccountDeleted = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("authUser");
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    setIsAccountMenuOpen(false);
+    setPage("landing");
+    setAuthMode(null);
+    scrollTop();
+  };
+
   const getUserInitial = () => {
     const displayName = getDisplayName(currentUser) || "U";
     return displayName.trim().charAt(0).toUpperCase() || "U";
@@ -285,7 +296,7 @@ function App() {
       ) : null}
 
       {page === "profile" && isAuthenticated ? (
-        <Profile user={currentUser} />
+        <Profile user={currentUser} onAccountDeleted={handleAccountDeleted} />
       ) : authMode ? (
         <Register
           mode={authMode}

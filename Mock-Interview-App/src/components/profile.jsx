@@ -11,10 +11,14 @@ function formatDate(iso) {
   }
 }
 
-function Profile() {
+function Profile({ onAccountDeleted }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [profile, setProfile] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const API_BASE = "http://127.0.0.1:8000";
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -23,8 +27,6 @@ function Profile() {
       setLoading(false);
       return;
     }
-
-    const API_BASE = "https://ai-mock-interview-ecosystem-21cm.onrender.com";
 
     async function load() {
       setLoading(true);
@@ -62,6 +64,41 @@ function Profile() {
     load();
   }, []);
 
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "Delete your account permanently? This removes your profile, interviews, answers, feedback, and login identity."
+    );
+
+    if (!confirmed) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setDeleteError("Not authenticated");
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError("");
+
+    try {
+      const res = await fetch(`${API_BASE}/profiles/me`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.detail || data?.error || "Failed to delete account");
+      }
+
+      onAccountDeleted?.();
+    } catch (err) {
+      setDeleteError(err.message || "Unable to delete account");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const displayName = profile?.full_name || "Candidate";
   const displayEmail = profile?.email || "No email available";
   const profilePhoto = profile?.avatar;
@@ -91,6 +128,17 @@ function Profile() {
 
   return (
     <main className="profile-page">
+      <div className="profile-delete-bar">
+        <button
+          className="delete-account-btn"
+          type="button"
+          onClick={handleDeleteAccount}
+          disabled={isDeleting}
+        >
+          {isDeleting ? "Deleting..." : "Delete Account"}
+        </button>
+      </div>
+
       <section className="profile-header">
         <div className="profile-identity">
           <img src={profilePhoto || avatar} alt="User profile" className="profile-avatar" />
@@ -143,6 +191,7 @@ function Profile() {
           </div>
         </div>
       </section>
+      {deleteError ? <p className="form-error profile-delete-error">{deleteError}</p> : null}
     </main>
   );
 }

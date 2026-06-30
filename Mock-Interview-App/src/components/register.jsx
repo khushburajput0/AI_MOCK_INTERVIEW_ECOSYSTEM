@@ -21,7 +21,7 @@ function Register({ mode, onModeChange, onComplete }) {
   const [otp, setOtp] = useState("");
   const [verificationMode, setVerificationMode] = useState(null);
 
-  const API_BASE = "https://ai-mock-interview-ecosystem-21cm.onrender.com";
+  const API_BASE = " http://127.0.0.1:8000";
   const otpDigits = Array.from({ length: 6 }, (_, index) => otp[index] || "");
 
   const getMaskedEmail = (value) => {
